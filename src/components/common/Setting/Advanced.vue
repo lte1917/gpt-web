@@ -13,7 +13,7 @@ const systemMessage = ref(settingStore.systemMessage ?? '')
 
 const temperature = ref(settingStore.temperature ?? 0.5)
 
-const top_p = ref(settingStore.top_p ?? 1)
+const top_p = ref(settingStore.top_p ?? 0.9)
 
 function updateSettings(options: Partial<SettingsState>) {
   settingStore.updateSetting(options)
@@ -52,7 +52,7 @@ function handleReset() {
       <div class="flex items-center space-x-4">
         <span class="flex-shrink-0 w-[120px]">{{ $t('setting.top_p') }} </span>
         <div class="flex-1">
-          <NSlider v-model:value="top_p" :max="1" :min="0" :step="0.1" />
+          <NSlider v-model:value="top_p" :max="0.9" :min="0" :step="0.1" />
         </div>
         <span>{{ top_p }}</span>
         <NButton size="tiny" text type="primary" @click="updateSettings({ top_p })">
