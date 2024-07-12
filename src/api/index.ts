@@ -78,11 +78,19 @@ export function logoutAPI<T = any>() {
 	});
 }
 
-export function registerAPI<T = any>(email: string, username: string, password: string) {
-
+export function registerAPI<T = any>(email: string, code:string, username: string, password: string) {
 	return post<T>({
 		url: '/register',
-		data: { email,username, password },
+		data: { email,code,username, password },
 	});
 }
+
+export function validateMailAPI<T = any>(email: string) {
+
+	return post<T>({
+		url: '/validateMail',
+		data: { email },
+	});
+}
+
 

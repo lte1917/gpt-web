@@ -13,10 +13,14 @@
 								<div class="jGQTZC">
 									<label class="iJLvzO">
 										<div class="fdCSlG">
-											<input class="cmCuLh" type="text" placeholder="Username" v-model="username" pattern=".{1,20}"
-														 title="Username must be 1-20 characters long" />
+											<input class="cmCuLh" type="text" placeholder="Username" v-model="username"/>
 										</div>
 									</label>
+<!--									<label class="iJLvzO" >-->
+<!--										<div class="fdCSlG">-->
+<!--											<input class="cmCuLh" type="text" placeholder="Verification Code" v-model="VerificationCode"/>-->
+<!--										</div>-->
+<!--									</label>-->
 									<label class="iJLvzO">
 										<div class="fdCSlG">
 											<input class="cmCuLh" type="password" placeholder="Password" v-model="password" />
@@ -66,6 +70,7 @@ import BackToHomepage from '@/components/common/BackToHomepage/AppBackToHomepage
 import ErrorAlert from "@/components/common/ErrorAlert/ErrorAlert.vue";
 import {loginAPI} from '@/api';
 const username = ref('');
+// const VerificationCode = ref('');
 const password = ref('');
 const loading = ref(false);
 const authError = ref('')

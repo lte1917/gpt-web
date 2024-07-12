@@ -7,7 +7,7 @@
 					<div class="dgrFox">
 						<div class="DaoRb">
 							<h1 class="eSHwvX">Create an account</h1>
-							<form @submit.prevent="signUp">
+							<form >
 								<ErrorAlert :error-msg="authError" @clearError="clearError" />
 								<div class="jGQTZC">
 
@@ -16,9 +16,10 @@
 											<input class="cmCuLh" type="text" placeholder="Email address" v-model="email" />
 										</div>
 									</label>
+
 									<label class="iJLvzO">
 										<div class="fdCSlG">
-											<input class="cmCuLh" type="text" placeholder="username" v-model="username" />
+											<input class="cmCuLh" type="text" placeholder="Username" v-model="username" />
 										</div>
 									</label>
 
@@ -27,9 +28,23 @@
 											<input class="cmCuLh" type="password" placeholder="Password" v-model="password" />
 										</div>
 									</label>
+
+									<el-form-item prop="verificationCode">
+
+										<div class="fdCSlG">
+											<el-input v-model="verificationCode" class="cmCuLh" placeholder="Verification code">
+												<template #suffix>
+												<span id="suffix-span">
+													<span>|</span>
+														<span id="suffix-span-2" @click="sendMail()" ref="spanRef" :style="{color: '#1764FF'}">{{ isSendValidationCode }}</span>
+												</span>
+												</template>
+											</el-input>
+										</div>
+									</el-form-item>
 								</div>
 								<div class="jGQTZC">
-									<button class="gZMQdu" type="submit" :disabled="loading">
+									<button class="gZMQdu" type="submit" :disabled="loading" @click.prevent="signUp()">
 										<div class="bjhGPG" :class="{loading: loading}">Sign up</div>
 										<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" class="jjoFVh" :class="{loading: loading}">
 											<g fill="none" stroke-width="1.5" stroke-linecap="round" class="faEWLr" style="stroke: var(--icon-color);">
@@ -70,19 +85,48 @@
 
 import {router} from "@/router";
 import { ref } from 'vue';
-import {registerAPI} from '@/api';
+import {registerAPI,validateMailAPI} from '@/api';
 import BackToHomepage from '@/components/common/BackToHomepage/AppBackToHomepage.vue';
 import ErrorAlert from '@/components/common/ErrorAlert/ErrorAlert.vue';
 const username = ref('');
 const email = ref('');
+const verificationCode = ref('');
 const password = ref('');
 const loading = ref(false);
 const authError = ref('')
+const spanRef = ref()
+const isSendValidationCode = ref<string>('发送验证码')
 
+
+const sendMail = async () => {
+	if (!email.value) return authError.value = 'Email required'
+	if (!email.value.match(/^([A-Za-z0-9_\-\.\u4e00-\u9fa5])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,8})$/)) return authError.value = 'Invalid email format'
+	clearError()
+	validateMailAPI(email.value).then((res) => {
+		isSendValidationCode.value = '60秒后重新发送'
+		spanRef.value.style = 'color: gray;' // 颜色变灰
+		const countDown = ref<number>(60) // 倒计时
+		const temp = setInterval(() => {
+			countDown.value--
+			isSendValidationCode.value = countDown.value + '秒后重新发送'
+			if (!countDown.value) {
+				clearInterval(temp)
+				spanRef.value.style = 'color: #1764FF;' // 颜色变蓝
+				isSendValidationCode.value = '重新发送验证码'
+				countDown.value = 60
+			}
+		}, 1000)
+
+	}).catch((err) => {
+		authError.value = err.message
+	});
+}
 
 const signUp = async () => {
 	if (!email.value) return authError.value = 'Email required'
 	if (!username.value) return authError.value = 'Username required';
+	if (!verificationCode.value) return authError.value = 'Verification code required';
+	if (verificationCode.value.toString().length != 6) return authError.value = 'Verification code must be 6 numbers'
 	if (username.value.length < 3) return authError.value = 'Username must be at least 3 characters'
 	if (!password.value) return authError.value = 'Password required';
 	if (password.value.length < 6) return authError.value = 'Password must be at least 6 characters'
@@ -94,7 +138,7 @@ const signUp = async () => {
 
 	clearError()
 	loading.value = true
-	registerAPI(email.value, username.value, password.value).then((res) => {
+	registerAPI(email.value, verificationCode.value,username.value, password.value).then((res) => {
 		loading.value = false;
 		alert(res.message)
 		router.push('/login/')

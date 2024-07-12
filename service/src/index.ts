@@ -1,4 +1,4 @@
-import express from 'express'
+import express, { response } from 'express'
 import type { RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
@@ -7,10 +7,29 @@ import { limiter } from './middleware/limiter'
 import { connection } from './middleware/db'
 import { isNotEmptyString } from './utils/is'
 import { c } from 'naive-ui'
+import nodemailer from 'nodemailer'
+import { env } from 'process'
+import { error } from 'console'
+import e from 'express'
+import { rand } from '@vueuse/core'
+import { floor } from 'naive-ui/es/color-picker/src/utils'
 
 const app = express()
 const router = express.Router()
+const MAIL_API_KEY = process.env.MAIL_API_KEY
+const transporter = nodemailer.createTransport({
+  service: 'qq', //使用的邮箱服务，这里qq为例
+  port: 465, //邮箱服务端口号
+  secure: false, // true for 465, false for other ports
+  auth: {
+    user: "2252351619@qq.com", //  邮箱地址
+    pass: MAIL_API_KEY, //授权码
+  },
+});
 
+
+let validateTimeMap = new Map<string, number>();
+let validateCodeMap = new Map<string, string>();
 app.use(express.static('public'))
 app.use(express.json())
 
@@ -109,12 +128,53 @@ router.post('/login', async (req, res) => {
   }
 })
 
+router.post('/validateMail', async (req, res) => {
+  try {
+    const { email } = req.body as { email: string }
+    const validTime = new Date().getTime()
+    if (!validateTimeMap.has(email)) {
+      validateTimeMap.set(email, validTime)
+    } else {
+      if (validTime - validateTimeMap.get(email) < 60000) {
+        res.send({ status: 'Fail', message: 'Please wait for ' + (Math.round(60-(validTime - validateTimeMap.get(email))/1000))+'seconds to resend your code', data: null })
+        return
+      }
+    }
+    const code = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+    transporter.sendMail({
+      from: '2252351619@qq.com', // 发信邮箱
+      to: email, //发送的邮箱列表
+      subject: 'Sustech Chat 注册验证码', // 主题
+      text: '【Sustech Chat】验证码 '+code+',用于Sustech Chat的身份验证，五分钟内有效，请勿泄露和转发。您正在注册Sustech Chat网站，如非本人操作，请忽略此邮件', // 文本内容
+    }).then(() =>{
+      validateCodeMap.set(email, code)
+      validateTimeMap.set(email, validTime)
+      res.send({ status: 'Success', message: 'Validate code has been sent to your email', data: null })
+    });
+  }catch (error) {
+    res.send({ status: 'Fail', message: error.message, data: null })
+  }
+}
+)
+
 router.post('/register', async (req, res) => {
   try {
-
-    const { email,username, password } = req.body as { email: string, username: string, password: string }
-    const query = 'SELECT username FROM users WHERE username = ' + '\''+username+'\'';
-
+    //code is verify code
+    const { email,code,username, password } = req.body as { email: string, code: string, username: string, password: string }
+    if (!validateTimeMap.has(email)) {
+      res.send({ status: 'Fail', message: 'Please validate your email first', data: null })
+      return
+    } else if (new Date().getTime() - validateTimeMap.get(email) > 300000) {
+        res.send({ status: 'Fail', message: 'Validate code is expired', data: null })
+        return
+    } else if (validateCodeMap.get(email).toString() !== code.toString()) {
+      console.log(validateCodeMap.get(email))
+      console.log(code)
+        res.send({ status: 'Fail', message: 'Validate code is incorrect', data: null })
+        return
+    }
+      
+    const query = 'SELECT username FROM users WHERE username = ' + '\'' + username + '\'';
     connection.query(query, (error, results) => {
       if (error) {
         res.send({ status: 'Fail', message: error, data: null })
@@ -133,7 +193,7 @@ router.post('/register', async (req, res) => {
               res.send({ status: 'Fail', message: error, data: null })
             } else {
               res.send({ status: 'Success', message: 'Register successful', data: { username } })
-              
+              validateCodeMap.set(email, '')
             }
           })
         }
