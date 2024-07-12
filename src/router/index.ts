@@ -6,10 +6,9 @@ import { ChatLayout } from '@/views/chat/layout'
 
 const routes: RouteRecordRaw[] = [
   {
-    path: '/',
+    path: '/chat',
     name: 'Root',
     component: ChatLayout,
-    redirect: '/chat',
     children: [
       {
         path: '/chat/:uuid?',
@@ -18,7 +17,26 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-
+	{
+		path: '/register',
+		name: 'Register',
+		component: () => import('@/views/register/index.vue'),
+	},
+	{
+		path: '/forgetPassword',
+		name: 'forgetPassword',
+		component: () => import('@/views/forgetPassword/index.vue'),
+	},
+	{
+		path: '/login',
+		name: 'Login',
+		component: () => import('@/views/login/index.vue'),
+	},
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/homepage/index.vue'),
+  },
   {
     path: '/404',
     name: '404',

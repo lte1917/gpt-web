@@ -64,3 +64,25 @@ export function fetchVerify<T>(token: string) {
     data: { token },
   })
 }
+export function loginAPI<T = any>(username: string, password: string) {
+
+	return post<T>({
+		url: '/login',
+		data: { username, password },
+	});
+}
+
+export function logoutAPI<T = any>() {
+	return post<T>({
+		url: '/logout',
+	});
+}
+
+export function registerAPI<T = any>(email: string, username: string, password: string) {
+
+	return post<T>({
+		url: '/register',
+		data: { email,username, password },
+	});
+}
+
