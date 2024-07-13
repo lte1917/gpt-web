@@ -4,7 +4,7 @@ import type { ChatMessage } from './chatgpt'
 import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
-import { connection } from './middleware/db'
+import { pool } from './middleware/db'
 import { isNotEmptyString } from './utils/is'
 import { c } from 'naive-ui'
 import nodemailer from 'nodemailer'
@@ -108,8 +108,8 @@ router.post('/login', async (req, res) => {
 
     const { username, password } = req.body as { username: string, password: string }
     const query = 'SELECT * FROM users WHERE username =' + '\''+username+'\'' + ' AND password =' + '\''+password+'\''
-  
-    connection.query(query, (error, results) => {
+
+    pool.query(query, (error, results) => {
       if (error) {
         res.send({ status: 'Fail', message: 'Database error', data: null })
       } else {
@@ -173,9 +173,9 @@ router.post('/register', async (req, res) => {
         res.send({ status: 'Fail', message: 'Validate code is incorrect', data: null })
         return
     }
-      
+
     const query = 'SELECT username FROM users WHERE username = ' + '\'' + username + '\'';
-    connection.query(query, (error, results) => {
+    pool.query(query, (error, results) => {
       if (error) {
         res.send({ status: 'Fail', message: error, data: null })
       } else {
@@ -187,8 +187,8 @@ router.post('/register', async (req, res) => {
           const date = new Date().toISOString().slice(0, 10);
           const query2 = 'INSERT INTO users (email, username, password,RegistrationDate) VALUES('
             + '\'' + email + '\'' + ',' + '\'' + username + '\'' + ',' + '\'' + password + '\''+ ',' + '\'' + date +'\''+ ')';
-              
-          connection.query(query2, (error, results) => {
+
+          pool.query(query2, (error, results) => {
             if (error) {
               res.send({ status: 'Fail', message: error, data: null })
             } else {
@@ -208,7 +208,7 @@ router.post('/register', async (req, res) => {
 
 // test
 router.get('/users', async (req, res) => {
-  connection.query('SELECT * FROM users', (error, results, fields) => {
+  pool.query('SELECT * FROM users', (error, results, fields) => {
     if (error) {
       res.status(500).json({ message: 'Error fetching users from database' });
     } else {
