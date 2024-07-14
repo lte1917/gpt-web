@@ -7,9 +7,8 @@ const pool = mysql.createPool({
 		password: 'ayyh8ztLNMhhRALX',
 		database: 'chatgpt',
 		connectionLimit: 100,
-		queueLimit: 2
+		queueLimit: 0,
+	reconnect: true
 });
-
-
 
 export { pool };

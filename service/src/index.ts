@@ -108,20 +108,26 @@ router.post('/login', async (req, res) => {
 
     const { username, password } = req.body as { username: string, password: string }
     const query = 'SELECT * FROM users WHERE username =' + '\''+username+'\'' + ' AND password =' + '\''+password+'\''
-
-    pool.query(query, (error, results) => {
-      if (error) {
-        res.send({ status: 'Fail', message: 'Database error', data: null })
-      } else {
-        if (results.length > 0) {
-          // Successful login
-          res.send({ status: 'Success', message: 'Login successful', data: { username } })
-        } else {
-          // Invalid credentials
-          res.send({ status: 'Fail', message: 'Invalid username or password', data: null })
-        }
-      }
-    })
+		pool.getConnection((err, connection) => {
+			if (err) {
+				console.error('error connecting: ' + err.stack)
+				return
+		}
+			connection.query(query, (error, results) => {
+				if (error) {
+					res.send({ status: 'Fail', message: error.message, data: null })
+				} else {
+					if (results.length > 0) {
+						// Successful login
+						res.send({ status: 'Success', message: 'Login successful', data: { username } })
+					} else {
+						// Invalid credentials
+						res.send({ status: 'Fail', message: 'Invalid username or password', data: null })
+					}
+				}
+			})
+			connection.release()
+		})
   }
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
@@ -175,31 +181,53 @@ router.post('/register', async (req, res) => {
     }
 
     const query = 'SELECT username FROM users WHERE username = ' + '\'' + username + '\'';
-    pool.query(query, (error, results) => {
-      if (error) {
-        res.send({ status: 'Fail', message: error, data: null })
-      } else {
-        if (results.length > 0) {
-          // 已被注册
-          res.send({ status: 'Fail', message: 'Username already exists', data: null })
-        } else {
-          //注册日期为当天
-          const date = new Date().toISOString().slice(0, 10);
-          const query2 = 'INSERT INTO users (email, username, password,RegistrationDate) VALUES('
-            + '\'' + email + '\'' + ',' + '\'' + username + '\'' + ',' + '\'' + password + '\''+ ',' + '\'' + date +'\''+ ')';
+		pool.getConnection((err, connection) => {
+			if (err) {
+				console.error('error connecting: ' + err.stack)
+				return
+			}
+			connection.query(query, (error, results) => {
+				if (error) {
+					res.send({
+						status: 'Fail',
+						message: error,
+						data: null
+					})
+				} else {
+					if (results.length > 0) {
+						// 已被注册
+						res.send({
+							status: 'Fail',
+							message: 'Username already exists',
+							data: null
+						})
+					} else {
+						//注册日期为当天
+						const date = new Date().toISOString().slice(0, 10);
+						const query2 = 'INSERT INTO users (email, username, password,RegistrationDate) VALUES('
+							+ '\'' + email + '\'' + ',' + '\'' + username + '\'' + ',' + '\'' + password + '\'' + ',' + '\'' + date + '\'' + ')';
 
-          pool.query(query2, (error, results) => {
-            if (error) {
-              res.send({ status: 'Fail', message: error, data: null })
-            } else {
-              res.send({ status: 'Success', message: 'Register successful', data: { username } })
-              validateCodeMap.set(email, '')
-            }
-          })
-        }
-      }
-    })
-  }
+						connection.query(query2, (error, results) => {
+							if (error) {
+								res.send({
+									status: 'Fail',
+									message: error,
+									data: null
+								})
+							} else {
+								res.send({
+									status: 'Success',
+									message: 'Register successful',
+									data: {username}
+								})
+								validateCodeMap.set(email, '')
+							}
+						})
+					}
+				}
+			})
+		})
+	}
   catch (error) {
     res.send({ status: 'Fail', message: error.message, data: null })
   }
