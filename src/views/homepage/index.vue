@@ -11,7 +11,7 @@
 						Your AI Assistant
 					</h1>
 					<p class="kRTmDC">
-						Sustech AI Chat is a chatbot that can help you with your questions and provide you with information about the university. It is a great tool for students, staff, and visitors to the university.
+						Sustech AI Chat is a chatbot that can help you with your questions and provide you answers.
 					</p>
 					<div class="uQxNj" v-if="user">
 						<button @click="logout" class="ieMfVH" :disabled="loading">
