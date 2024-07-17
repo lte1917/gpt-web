@@ -13,6 +13,7 @@ const pool = mysql.createPool({
 
 setInterval(() => {
 //check connection
+	console.log('check connection')
 	pool.getConnection((err, connection) => {
 		if (err) {
 			if (err.code === 'PROTOCOL_CONNECTION_LOST') {
@@ -28,6 +29,6 @@ setInterval(() => {
 		if (connection) connection.release();
 		return;
 	});
-}, 1000*60*60);
+}, 1000);
 
 export { pool };
