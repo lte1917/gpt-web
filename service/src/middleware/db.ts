@@ -13,7 +13,7 @@ const pool = mysql.createPool({
 
 setInterval(() => {
 //check connection
-	console.log('check connection')
+
 	pool.getConnection((err, connection) => {
 		if (err) {
 			if (err.code === 'PROTOCOL_CONNECTION_LOST') {
