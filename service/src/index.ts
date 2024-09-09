@@ -174,8 +174,6 @@ router.post('/register', async (req, res) => {
         res.send({ status: 'Fail', message: 'Validate code is expired', data: null })
         return
     } else if (validateCodeMap.get(email).toString() !== code.toString()) {
-      console.log(validateCodeMap.get(email))
-      console.log(code)
         res.send({ status: 'Fail', message: 'Validate code is incorrect', data: null })
         return
     }
